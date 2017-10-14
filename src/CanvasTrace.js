@@ -52,18 +52,69 @@ function update(options) {
 
         // 轨迹上的方向箭头
         // 像素点插值
-        console.log(JSON.stringify(pixelArr, null, '\t'));
+        // console.log(JSON.stringify(pixelArr, null, '\t'));
+        // 去重后的像素点
+        var pixelNoRepeat = [];
+        var pre = pixelArr[0];
         for (var i in pixelArr) {
             var item = pixelArr[i];
             if (i == 0) continue;
-            var pre = pixelArr[i - 1];
+            // var next = pixelArr[Number(i) + 1];
             var distance = Math.sqrt(Math.pow(Math.abs(pre.x - item.x), 2) +
                 Math.pow(Math.abs(pre.y - item.y), 2));
-            console.log(distance);
+            if (distance >= 10) {
+                pixelNoRepeat.push({
+                    position: pre,
+                    distance: distance.toFixed(2)
+                })
+                pre = item;
+            }
+            // console.log(distance);
         }
-        // 根据距离算出两个点之间需要插入几个点
-        // 然后插值让点均匀分布
-        // 最后截取出需要显示方向箭头的位置数组
-        // 画方向箭头，注意方向
+        pixelNoRepeat.push({
+            position: pixelArr[pixelArr.length - 1]
+        });
+        // 插值后的像素点
+        var pixelInterpo = [];
+        for (var i in pixelNoRepeat) {
+            var item = pixelNoRepeat[i];
+            if (i == (pixelNoRepeat.length - 1)) break;
+            if (item.x < 0 || item.x > ctx.canvas.width ||
+                item.y < 0 || item.y > ctx.canvas.height)
+                continue;
+            // 根据距离算出两个点之间需要插入几个点
+            // if (item.distance < 1) continue;
+            var next = pixelNoRepeat[Number(i) + 1];
+            var xstep = (next.position.x - item.position.x) / (item.distance / 20);
+            var ystep = (next.position.y - item.position.y) / (item.distance / 20);
+            var angle = Math.atan((next.position.x - item.position.x) / (next.position.y - item.position.y));
+            // pixelInterpo.push(item.position);
+            for (var j = 0; j < (item.distance / 20); j++) {
+                pixelInterpo.push({
+                    x: item.position.x + xstep * j,
+                    y: item.position.y + ystep * j,
+                    angle: -angle
+                })
+            }
+        }
+        ctx.fillStyle = "white"
+        ctx.beginPath();
+        for (var i in pixelInterpo) {
+            if (i % 3 !== 0) continue;
+            var item = pixelInterpo[i];
+            ctx.save();
+            ctx.strokeStyle = "white";
+            ctx.lineWidth = options.width / 4;
+            ctx.translate(item.x, item.y);
+            ctx.rotate(item.angle);
+            var marlength = options.width / 2;
+            ctx.moveTo(-marlength, marlength);
+            ctx.lineTo(0, 0);
+            ctx.lineTo(marlength, marlength);
+            ctx.stroke();
+            // ctx.arc(0, 0, 1, 0, 2 * Math.PI);
+            ctx.restore();
+        }
+        // console.log(JSON.stringify(pixelInterpo, null, '\t'));
     }
 }
