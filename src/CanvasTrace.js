@@ -51,15 +51,12 @@ function update(options) {
         ctx.stroke();
 
         // 轨迹上的方向箭头
-        // 像素点插值
-        // console.log(JSON.stringify(pixelArr, null, '\t'));
         // 去重后的像素点
         var pixelNoRepeat = [];
         var pre = pixelArr[0];
         for (var i in pixelArr) {
             var item = pixelArr[i];
             if (i == 0) continue;
-            // var next = pixelArr[Number(i) + 1];
             var distance = Math.sqrt(Math.pow(Math.abs(pre.x - item.x), 2) +
                 Math.pow(Math.abs(pre.y - item.y), 2));
             if (distance >= 10) {
@@ -69,7 +66,6 @@ function update(options) {
                 })
                 pre = item;
             }
-            // console.log(distance);
         }
         pixelNoRepeat.push({
             position: pixelArr[pixelArr.length - 1]
@@ -87,20 +83,21 @@ function update(options) {
             var next = pixelNoRepeat[Number(i) + 1];
             var xstep = (next.position.x - item.position.x) / (item.distance / 20);
             var ystep = (next.position.y - item.position.y) / (item.distance / 20);
-            var angle = Math.atan((next.position.x - item.position.x) / (next.position.y - item.position.y));
-            // pixelInterpo.push(item.position);
+            var angle = positionToAngle(item.position, next.position);
+            item.position.angle = angle;
+            pixelInterpo.push(item.position);
             for (var j = 0; j < (item.distance / 20); j++) {
                 pixelInterpo.push({
                     x: item.position.x + xstep * j,
                     y: item.position.y + ystep * j,
-                    angle: -angle
+                    angle: angle
                 })
             }
         }
-        ctx.fillStyle = "white"
+        ctx.fillStyle = "white";
         ctx.beginPath();
         for (var i in pixelInterpo) {
-            if (i % 3 !== 0) continue;
+            if ((Number(i) + 1) % 5 !== 0) continue;
             var item = pixelInterpo[i];
             ctx.save();
             ctx.strokeStyle = "white";
@@ -112,9 +109,125 @@ function update(options) {
             ctx.lineTo(0, 0);
             ctx.lineTo(marlength, marlength);
             ctx.stroke();
-            // ctx.arc(0, 0, 1, 0, 2 * Math.PI);
             ctx.restore();
         }
-        // console.log(JSON.stringify(pixelInterpo, null, '\t'));
     }
+}
+// 根据坐标计算与x轴正方向的夹角
+function positionToAngle(p1, p2) {
+    if (p1.x == p2.x && p1.y == p2.y) return 0;
+    if (p1.x == p2.x) return p2.y > p1.y ? Math.PI : Math.PI * 2;
+    var angle = Math.atan((p2.y - p1.y) / (p2.x - p1.x));
+    if (p2.x >= p1.x) return angle + Math.PI / 2;
+    if (p2.x < p1.x) return angle + Math.PI / 2 * 3;
+}
+
+/**
+ * 一直覆盖在当前地图视野的Canvas对象
+ *
+ * @author nikai (@胖嘟嘟的骨头, nikai@baidu.com)
+ *
+ * @param 
+ * {
+ *     map 地图实例对象
+ * }
+ */
+
+function CanvasLayer(options) {
+    this.options = options || {};
+    this.paneName = this.options.paneName || 'labelPane';
+    this.zIndex = this.options.zIndex || 0;
+    this._map = options.map;
+    this._lastDrawTime = null;
+    this.show();
+}
+
+CanvasLayer.prototype = new BMap.Overlay();
+
+CanvasLayer.prototype.initialize = function(map) {
+    this._map = map;
+    let canvas = this.canvas = document.createElement("canvas");
+    let ctx = this.ctx = this.canvas.getContext('2d');
+    canvas.style.cssText = "position:absolute;" +
+        "left:0;" +
+        "top:0;" +
+        "z-index:" + this.zIndex + ";";
+    this.adjustSize();
+    this.adjustRatio(ctx);
+    map.getPanes()[this.paneName].appendChild(canvas);
+    let that = this;
+    map.addEventListener('resize', function() {
+        that.adjustSize();
+        that._draw();
+    });
+    return this.canvas;
+}
+
+CanvasLayer.prototype.adjustSize = function() {
+    let size = this._map.getSize();
+    let canvas = this.canvas;
+    canvas.width = size.width;
+    canvas.height = size.height;
+    canvas.style.width = canvas.width + "px";
+    canvas.style.height = canvas.height + "px";
+}
+
+CanvasLayer.prototype.adjustRatio = function(ctx) {
+    let backingStore = ctx.backingStorePixelRatio ||
+        ctx.webkitBackingStorePixelRatio ||
+        ctx.mozBackingStorePixelRatio ||
+        ctx.msBackingStorePixelRatio ||
+        ctx.oBackingStorePixelRatio ||
+        ctx.backingStorePixelRatio || 1;
+    let pixelRatio = (window.devicePixelRatio || 1) / backingStore;
+    let canvasWidth = ctx.canvas.width;
+    let canvasHeight = ctx.canvas.height;
+    ctx.canvas.width = canvasWidth * pixelRatio;
+    ctx.canvas.height = canvasHeight * pixelRatio;
+    ctx.canvas.style.width = canvasWidth + 'px';
+    ctx.canvas.style.height = canvasHeight + 'px';
+    console.log(ctx.canvas.height, canvasHeight);
+    ctx.scale(pixelRatio, pixelRatio);
+};
+
+CanvasLayer.prototype.draw = function() {
+    let self = this;
+    let args = arguments;
+
+    clearTimeout(self.timeoutID);
+    self.timeoutID = setTimeout(function() {
+        self._draw.apply(self, args);
+    }, 15);
+}
+
+CanvasLayer.prototype._draw = function() {
+    let map = this._map;
+    this.canvas.style.left = -map.offsetX + 'px';
+    this.canvas.style.top = -map.offsetY + 'px';
+    this.dispatchEvent('draw');
+    this.options.update && this.options.update.apply(this, arguments);
+}
+
+CanvasLayer.prototype.getContainer = function() {
+    return this.canvas;
+}
+
+CanvasLayer.prototype.show = function() {
+    if (!this.canvas) {
+        this._map.addOverlay(this);
+    }
+    this.canvas.style.display = "block";
+}
+
+CanvasLayer.prototype.hide = function() {
+    this.canvas.style.display = "none";
+    //this._map.removeOverlay(this);
+}
+
+CanvasLayer.prototype.setZIndex = function(zIndex) {
+    this.canvas.style.zIndex = zIndex;
+}
+
+CanvasLayer.prototype.getZIndex = function() {
+    return this.zIndex;
 }
