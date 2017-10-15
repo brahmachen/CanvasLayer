@@ -25,6 +25,6 @@ var canvasTrace = new CanvasTrace(options)
 - 轨迹的颜色渐变。根据某个值（如速度）设置不同的颜色，并实现渐变效果；
 - 动画。实现带有动画的方向箭头。 -->
 ### 示例 
-[传送门]()
+[传送门](https://brahmachen.github.io/CanvasLayer/trace-examples/trace.html)
 <!--[绘制正方形示例](http://huiyan-fe.github.io/CanvasLayer/examples/point.html) 
 [绘制圆形动画示例](http://huiyan-fe.github.io/CanvasLayer/examples/animationcircle.html) -->
