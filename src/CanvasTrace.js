@@ -51,6 +51,7 @@ function update(options) {
         ctx.stroke();
 
         // 轨迹上的方向箭头
+        if (!options.showArrow) return;
         // 去重后的像素点
         var pixelNoRepeat = [];
         var pre = pixelArr[0];

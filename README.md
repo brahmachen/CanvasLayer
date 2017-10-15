@@ -21,10 +21,10 @@ var canvasTrace = new CanvasTrace(options)
 |showArrow  |否，默认`false` |Boolean，是否显示轨迹线上的方向箭头，默认不显示
 
 
-<!-- ### todo list
+### todo list
 
 - 轨迹的颜色渐变。根据某个值（如速度）设置不同的颜色，并实现渐变效果；
-- 动画。实现带有动画的方向箭头。 -->
+- 动画。实现带有动画的方向箭头。
 ### 示例 
 [传送门](https://brahmachen.github.io/CanvasTrace/trace-examples/trace.html)
 <!--[绘制正方形示例](http://huiyan-fe.github.io/CanvasLayer/examples/point.html) 
