@@ -1,5 +1,6 @@
 # CanvasTrace
 在百度地图上使用canvas创建路线轨迹，可以方便的通过配置绘制出复杂样式的地图轨迹。
+[示例传送门](https://brahmachen.github.io/CanvasLayer/trace-examples/trace.html)
 
 ## 开始使用
 ### 引入
