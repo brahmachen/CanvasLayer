@@ -1,7 +1,3 @@
-/**
- * @author nikai (@胖嘟嘟的骨头, nikai@baidu.com)
- */
-
 // 创建Map实例
 var map1 = new BMap.Map("map");
 
