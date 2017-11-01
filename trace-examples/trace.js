@@ -9,7 +9,8 @@ var canvasTrace = new CanvasTrace({
     map: map1,
     color: "red",
     width: 7,
-    showArrow: true
+    showArrow: true,
+    showAnimation: true
 })
 map1.setViewport([traceArr[0],
     traceArr[traceArr.length - 1]

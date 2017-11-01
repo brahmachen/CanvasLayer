@@ -2,6 +2,7 @@ function CanvasTrace(options) {
     this.options = options || {};
     this.trace = this.options.data;
     this._map = this.options.map;
+    this.options.yushu = 0;
     this.draw();
 }
 
@@ -10,6 +11,14 @@ CanvasTrace.prototype.draw = function() {
         map: this._map,
         update: update(this.options)
     })
+    var options = this.options;
+    if (this.options.showAnimation) {
+        setInterval(function() {
+            options.yushu += 1;
+            options.yushu %= 5;
+            canvasLayer.draw();
+        }, 200)
+    }
 }
 
 function update(options) {
@@ -98,7 +107,7 @@ function update(options) {
         ctx.fillStyle = "white";
         ctx.beginPath();
         for (var i in pixelInterpo) {
-            if ((Number(i) + 1) % 5 !== 0) continue;
+            if ((Number(i) + 1) % 5 !== options.yushu) continue;
             var item = pixelInterpo[i];
             ctx.save();
             ctx.strokeStyle = "white";
